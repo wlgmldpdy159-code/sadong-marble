@@ -2,58 +2,75 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f5f2">
 <title>사동마블 · 우리동네 나눔 탐색 지도</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#f4f5f2;color:#222;font-family:"Noto Sans KR",Arial,sans-serif}
-header{background:#fff;border-bottom:1px solid #ddd;padding:16px 20px;position:sticky;top:0;z-index:20}
-h1{margin:0;font-size:22px}.sub{margin-top:4px;color:#666;font-size:13px}
-.wrap{max-width:1180px;margin:auto;padding:16px}
+html,body{margin:0;padding:0;background:#f4f5f2;color:#222;font-family:Arial,"Noto Sans KR",sans-serif}
+body{min-width:320px}
+header{background:#fff;border-bottom:1px solid #ddd;padding:18px 20px}
+h1{margin:0;font-size:22px;line-height:1.3}.sub{margin-top:7px;color:#666;font-size:14px;line-height:1.5}
+.wrap{max-width:1180px;margin:auto;padding:14px}
 .layout{display:grid;grid-template-columns:1.35fr .85fr;gap:16px}
-.card{background:#fff;border:1px solid #ddd;border-radius:16px;padding:14px;box-shadow:0 2px 10px #0000000a}
-.map{height:620px;position:relative;overflow:hidden;border-radius:14px;background:#e8eee4}
-.road{position:absolute;background:#fff;border:1px solid #d2d7cf;box-shadow:0 1px 2px #0001;border-radius:5px}
+.card{background:#fff;border:1px solid #ddd;border-radius:16px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+button{border:1px solid #bbb;background:#fff;border-radius:10px;padding:10px 12px;cursor:pointer;font:inherit;touch-action:manipulation}
+button.primary{background:#222;color:#fff;border-color:#222}.secondary{background:#f6f7f5}
+button.activeTool{background:#3f8f54;color:#fff;border-color:#3f8f54}
+button:disabled{opacity:.55;cursor:wait}
+.notice{background:#eef6ff;border:1px solid #cfe4ff;border-radius:10px;padding:10px;margin:9px 0;font-size:12px;line-height:1.55}
+.markerHint{display:none;font-size:12px;color:#2e6f3c;background:#edf8ef;border:1px solid #cce7d0;border-radius:9px;padding:8px 10px;margin:8px 0}
+.poiLoading,.poiHint{font-size:12px;color:#5d675f;background:#f7f9f6;border:1px solid #dfe5dd;border-radius:9px;padding:8px 10px;margin-top:8px}
+.poiHint{color:#2e6f3c;background:#edf8ef;border-color:#cce7d0}
+.map-shell{position:relative}
+#map{width:100%;height:620px;min-height:620px;border-radius:14px;overflow:hidden;background:#e8eee4;border:1px solid #d3d9d0;position:relative;touch-action:manipulation}
+.road{position:absolute;background:#fff;border:1px solid #d2d7cf;box-shadow:0 1px 2px #0001;border-radius:5px;z-index:1}
 .r1{width:125%;height:52px;left:-12%;top:22%;transform:rotate(10deg)}
 .r2{width:125%;height:46px;left:-12%;top:58%;transform:rotate(-15deg)}
 .r3{width:75%;height:34px;left:13%;top:43%;transform:rotate(72deg)}
 .r4{width:85%;height:28px;left:8%;top:79%;transform:rotate(5deg)}
 .r5{width:65%;height:26px;left:26%;top:12%;transform:rotate(-28deg)}
-.park{position:absolute;background:#d2e2cb;border-radius:45%;opacity:.9}
+.park{position:absolute;background:#d2e2cb;border-radius:45%;opacity:.92;z-index:0}
 .p1{width:230px;height:150px;left:6%;top:43%}.p2{width:180px;height:120px;right:5%;top:6%}
-.water{position:absolute;background:#cfe2ee;border-radius:50%;width:330px;height:170px;right:-80px;bottom:-60px}
-.route{position:absolute;height:5px;background:#666;transform-origin:left center;z-index:3;border-radius:5px;opacity:.85}
+.water{position:absolute;background:#cfe2ee;border-radius:50%;width:330px;height:170px;right:-80px;bottom:-60px;z-index:0}
+.route{position:absolute;height:5px;background:#666;transform-origin:left center;z-index:3;border-radius:5px;opacity:.72}
 .routeNum{position:absolute;z-index:5;width:24px;height:24px;border-radius:50%;background:#222;color:#fff;text-align:center;line-height:24px;font-size:12px;font-weight:700;transform:translate(-50%,-50%)}
-.marker{position:absolute;transform:translate(-50%,-100%);z-index:7;cursor:pointer;text-align:center}
-.pin{font-size:34px;filter:drop-shadow(0 2px 2px #5555)}
-.label{background:#fff;border:1px solid #aaa;border-radius:8px;padding:4px 7px;font-size:11px;white-space:nowrap;box-shadow:0 1px 3px #0002}
+.marker{position:absolute;transform:translate(-50%,-100%);z-index:8;cursor:pointer;text-align:center;background:transparent;border:0;padding:0;touch-action:manipulation}
+.marker .pin{font-size:34px;filter:drop-shadow(0 2px 2px #5555);transition:transform .12s}
+.marker .label{display:inline-block;background:#fff;border:1px solid #aaa;border-radius:8px;padding:4px 7px;font-size:11px;white-space:nowrap;box-shadow:0 1px 3px #0002;color:#222}
 .marker.active .label{background:#222;color:#fff;border-color:#222}
 .marker.active .pin{transform:scale(1.15)}
-.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-button{border:1px solid #bbb;background:#fff;border-radius:9px;padding:9px 12px;cursor:pointer;font:inherit}
-button.primary{background:#222;color:#fff;border-color:#222}
-button:disabled{opacity:.5;cursor:wait}
-h2{font-size:18px;margin:2px 0 10px}.small{font-size:11px;color:#777;line-height:1.5}
-label{display:block;font-size:12px;font-weight:700;margin-top:9px}
-textarea,input[type=text],select{width:100%;padding:9px;border:1px solid #ccc;border-radius:8px;font:inherit}
-textarea{min-height:65px;resize:vertical}
-.stars{font-size:29px;letter-spacing:1px}
+.marker.custom .pin{filter:drop-shadow(0 2px 2px #5555)}
+.map.designing{cursor:crosshair}
+.map.designing .marker{cursor:pointer}
+.place-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.place-chip{background:#fff;border:1px solid #cfd6cf;border-radius:999px;padding:8px 11px;font-size:12px;cursor:pointer}
+.place-chip strong{margin-right:3px}
+.small{font-size:11px;color:#777;line-height:1.5}
+h2{font-size:18px;margin:2px 0 10px}
 .empty{text-align:center;color:#777;padding:45px 15px;line-height:1.7}
-.placeList{display:flex;gap:6px;flex-wrap:wrap}
-.placeBtn{font-size:12px;padding:7px 9px}.selected{outline:2px solid #222}
-.notice{background:#eef6ff;border:1px solid #cfe4ff;border-radius:10px;padding:9px;margin:8px 0;font-size:12px}
 .status{min-height:18px;margin-top:8px;font-size:12px}.ok{color:#176b32}.err{color:#a52222}
-.photos{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}
-.photo{position:relative}.photo img{width:82px;height:82px;object-fit:cover;border-radius:9px;border:1px solid #ddd;cursor:zoom-in}
+label{display:block;font-size:12px;font-weight:700;margin-top:9px}
+textarea,input[type=text],select{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;font:inherit}
+textarea{min-height:70px;resize:vertical}
+.stars{font-size:29px;letter-spacing:1px}.stars button{border:0;background:transparent;padding:2px 3px;font-size:29px}
+.photos{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}.photo{position:relative}.photo img{width:82px;height:82px;object-fit:cover;border-radius:9px;border:1px solid #ddd;cursor:zoom-in}
 .remove{position:absolute;right:-5px;top:-5px;border:0;background:#222;color:#fff;border-radius:50%;width:21px;height:21px;padding:0}
-.review{border-top:1px solid #eee;padding:13px 0}.review:first-child{border-top:0}
-.review img{width:88px;height:88px;object-fit:cover;border-radius:8px;margin:6px 5px 0 0;cursor:zoom-in}
-.reviewHead{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.badge{background:#f0f0f0;border-radius:7px;padding:3px 6px;font-size:10px}
-.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.84);z-index:9999;align-items:center;justify-content:center;padding:22px}
-.lightbox.open{display:flex}.lightbox img{max-width:94vw;max-height:88vh;object-fit:contain;border-radius:10px}
-.lightboxClose{position:absolute;right:16px;top:14px;width:46px;height:46px;border:0;border-radius:50%;background:#fff;font-size:28px;padding:0}
-@media(max-width:850px){.layout{grid-template-columns:1fr}.map{height:500px}}
+.review{border-top:1px solid #eee;padding:13px 0}.review:first-child{border-top:0}.review img{width:88px;height:88px;object-fit:cover;border-radius:8px;margin:6px 5px 0 0;cursor:zoom-in}
+.reviewHead{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.badge{background:#f0f0f0;border-radius:7px;padding:3px 6px;font-size:10px}
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.84);z-index:9999;align-items:center;justify-content:center;padding:22px}.lightbox.open{display:flex}.lightbox img{max-width:94vw;max-height:88vh;object-fit:contain;border-radius:10px}.lightboxClose{position:absolute;right:16px;top:14px;width:46px;height:46px;border:0;border-radius:50%;background:#fff;font-size:28px;padding:0}
+.placeModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:8000;align-items:center;justify-content:center;padding:18px}.placeModal.open{display:flex}.placeModalCard{width:min(420px,94vw);background:#fff;border-radius:18px;padding:18px;box-shadow:0 14px 45px rgba(0,0,0,.25);max-height:90vh;overflow:auto}
+.placeModalHead{display:flex;justify-content:space-between;align-items:center;gap:10px}.placeModalHead h3{margin:0;font-size:18px}.iconChoices{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}.iconChoice{width:42px;height:42px;padding:0;font-size:22px;border-radius:50%}.iconChoice.chosen{background:#49a85d;color:#fff;border-color:#49a85d}
+.locationBadge{display:inline-flex;align-items:center;gap:5px;background:#f5f7f4;border:1px solid #dce2dc;border-radius:999px;padding:5px 8px;font-size:11px;color:#555;margin-top:8px}
+@media(max-width:850px){
+  header{padding:16px 16px}.wrap{padding:10px}.layout{grid-template-columns:1fr;gap:10px}.card{border-radius:14px;padding:12px}
+  h1{font-size:21px}.sub{font-size:13px}
+  .controls button{flex:1 1 calc(50% - 8px);min-height:46px}
+  #map{height:52vh;min-height:460px;max-height:560px;border-radius:12px}
+  .place-list{gap:6px}.place-chip{padding:9px 10px}
+}
+@media(max-width:430px){#map{height:500px;min-height:500px}.poi-label{font-size:11px}.poi-icon{width:50px;height:50px;font-size:27px}}
 </style>
 </head>
 <body>
@@ -67,27 +84,27 @@ textarea{min-height:65px;resize:vertical}
 <section class="card">
 <div class="controls">
 <button class="primary" type="button" id="hintBtn">💡 나눔 힌트 카드</button>
+<button class="secondary" type="button" id="designBtn">📍 장소 직접 지정</button>
 <button type="button" id="backupBtn">📤 리뷰 백업</button>
 <button type="button" id="importBtn">📥 리뷰 불러오기</button>
 <input id="importFile" type="file" accept=".json" hidden>
 </div>
-<div class="notice">📌 <b>탐색 코스</b>가 지도에 표시되어 있어요. 장소 아이콘을 눌러 기록을 남겨보세요. 사진은 자동으로 압축해 저장합니다.</div>
-<div class="map" id="map">
-<div class="road r1"></div><div class="road r2"></div><div class="road r3"></div><div class="road r4"></div><div class="road r5"></div>
-<div class="park p1"></div><div class="park p2"></div><div class="water"></div>
+<div class="notice">📌 <b>활동용 나눔 탐색 지도</b>예요. 실제 지도 서비스가 아니라 우리 동네 탐색 활동을 위한 가짜 지도 형식으로 구성했어요. 장소 아이콘을 누르면 바로 리뷰를 작성할 수 있어요.</div>
+<div id="designHint" class="markerHint">✨ 장소 지정 모드예요. 지도에서 원하는 위치를 한 번 눌러주세요.</div>
+<div class="map-shell">
+  <div id="map" aria-label="사동마블 활동용 나눔 탐색 지도">
+    <div class="road r1"></div><div class="road r2"></div><div class="road r3"></div><div class="road r4"></div><div class="road r5"></div>
+    <div class="park p1"></div><div class="park p2"></div><div class="water"></div>
+  </div>
 </div>
-<p class="small">※ 현재 버전은 <b>실제 지도 서비스 API가 아닌 활동용 지도</b>입니다. 아래의 장소명·주소를 기준으로 사동마블 탐색 코스를 구성했으며, '근처 횡단보도'는 현장에서 위치를 확인해 주세요.</p>
+<div class="place-list" id="placeList"></div>
+<p class="small" style="margin-top:10px">※ 기본 장소는 사동복지센터·사동청소년문화의집·감골어린이공원·장화경로당·근처 횡단보도·고물상입니다. 활동용 지도이므로 실제 위치와는 다를 수 있어요.</p>
 </section>
 
 <aside class="card">
 <h2 id="title">📍 장소를 선택해 주세요</h2>
 <div id="detail" class="empty">지도에서 장소 아이콘을 눌러<br>나눔 탐색 기록을 작성해보세요.</div>
 </aside>
-</div>
-
-<div class="card" style="margin-top:16px">
-<h2>🧭 오늘의 탐색 코스</h2>
-<div id="places" class="placeList"></div>
 </div>
 
 <div class="card" style="margin-top:16px">
@@ -102,149 +119,161 @@ textarea{min-height:65px;resize:vertical}
 <img id="lightboxImg" alt="확대된 리뷰 사진">
 </div>
 
-<script>
-const places=[
-{name:"사동복지센터",addr:"경기 안산시 상록구 장화2길 20 사동복지센터",icon:"🏠",x:17,y:80},
-{name:"사동청소년문화의집",addr:"경기 안산시 상록구 선진로 112",icon:"🏫",x:28,y:25},
-{name:"감골 어린이공원",addr:"경기도 안산시 상록구 사동 1406-9번지",icon:"🌳",x:48,y:48},
-{name:"근처 횡단보도",addr:"현장에서 위치 확인",icon:"🚸",x:63,y:59},
-{name:"장화경로당",addr:"경기 안산시 상록구 장화2길 20",icon:"🧓",x:72,y:77},
-{name:"부강자원 (고물상)",addr:"경기 안산시 상록구 사동 1412",icon:"♻️",x:49,y:89}
-];
-const hints=[
-["⏰ 시간","나의 시간을 나눌 수 있을까? 함께 이야기하기, 놀아주기, 도와주기 등"],
-["🎁 물건","내가 가진 것 중 다른 사람에게 필요한 것은 무엇일까?"],
-["🎨 재능","내가 잘하거나 좋아하는 것을 다른 사람과 나눌 수 있을까?"],
-["💪 힘","내가 직접 움직이거나 도와줄 수 있는 일은 무엇일까?"],
-["💬 관심","누군가에게 관심을 보여주는 것도 나눔이에요. 무엇을 듣고 물어볼까?"],
-["😊 친절","작은 친절 하나로 누군가의 하루가 달라질 수 있을까?"],
-["🌱 환경","우리 동네 환경을 위해 내가 할 수 있는 나눔은 무엇일까?"]
-];
-const KEY="sadongMarvelFinalReviewsV1";
-let db=loadDB(),selected=null,currentPhotos=[];
+<div class="placeModal" id="placeModal" role="dialog" aria-modal="true" aria-label="새 장소 지정">
+  <div class="placeModalCard">
+    <div class="placeModalHead"><h3>📍 새 장소 지정</h3><button type="button" id="placeModalClose" aria-label="닫기">×</button></div>
+    <div class="small" style="margin-top:6px">찍은 위치와 선택한 아이콘을 저장하면 지도에 바로 반영되고, 이후 다시 열어도 유지돼요.</div>
+    <div id="pickedLocation" class="locationBadge">📌 지도에서 위치를 선택했어요</div>
+    <label>장소 이름</label><input type="text" id="customPlaceName" placeholder="예: 나눔냉장고 / 우리 동네 쉼터">
+    <label>아이콘</label>
+    <div class="iconChoices">
+      <button type="button" class="iconChoice chosen" data-icon="⭐">⭐</button><button type="button" class="iconChoice" data-icon="❤️">❤️</button><button type="button" class="iconChoice" data-icon="🏠">🏠</button><button type="button" class="iconChoice" data-icon="🏫">🏫</button><button type="button" class="iconChoice" data-icon="🌳">🌳</button><button type="button" class="iconChoice" data-icon="🚸">🚸</button><button type="button" class="iconChoice" data-icon="🧓">🧓</button><button type="button" class="iconChoice" data-icon="♻️">♻️</button><button type="button" class="iconChoice" data-icon="🎨">🎨</button><button type="button" class="iconChoice" data-icon="🍀">🍀</button><button type="button" class="iconChoice" data-icon="☕">☕</button><button type="button" class="iconChoice" data-icon="🐾">🐾</button>
+    </div>
+    <label>주소 (선택)</label><input type="text" id="customPlaceAddr" placeholder="예: 경기 안산시 상록구 ...">
+    <div class="controls" style="margin-top:14px;margin-bottom:0"><button type="button" class="secondary" id="placeModalCancel">취소</button><button type="button" class="primary" id="saveCustomPlace">✨ 지도에 추가</button></div>
+    <div id="placeModalStatus" class="status"></div>
+  </div>
+</div>
 
+<script>
+const DEFAULT_PLACES=[
+ {id:"default-center",name:"사동복지센터",addr:"경기도 안산시 상록구 장화2길 20",icon:"🏠",fixed:true,number:1,x:17,y:80},
+ {id:"default-youth",name:"사동청소년문화의집",addr:"경기 안산시 상록구 선진로 112",icon:"🏫",fixed:true,number:2,x:28,y:25},
+ {id:"default-park",name:"감골 어린이공원",addr:"경기도 안산시 상록구 사동 1406-9번지",icon:"🌳",fixed:true,number:3,x:48,y:48},
+ {id:"default-crosswalk",name:"근처 횡단보도",addr:"현장에서 위치 확인",icon:"🚸",fixed:true,number:4,x:63,y:59},
+ {id:"default-senior",name:"장화경로당",addr:"경기 안산시 상록구 장화2길 20",icon:"🧓",fixed:true,number:5,x:72,y:77},
+ {id:"default-junk",name:"고물상",addr:"경기 안산시 상록구 사동 1412",icon:"♻️",fixed:true,number:6,x:49,y:89}
+];
+const CUSTOM_PLACES_KEY="sadongMarvelCustomPlacesV2";
+const KEY="sadongMarvelFinalReviewsV1";
+const DB_MIGRATION_KEY="sadongMarvelReviewsMigratedToDefaultPlacesV1";
+
+function esc(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function loadCustomPlaces(){try{const v=JSON.parse(localStorage.getItem(CUSTOM_PLACES_KEY)||"[]");return Array.isArray(v)?v.filter(p=>p&&p.custom&&Number.isFinite(+p.x)&&Number.isFinite(+p.y)):[]}catch(e){return []}}
+function saveCustomPlaces(){localStorage.setItem(CUSTOM_PLACES_KEY,JSON.stringify(places.filter(p=>p.custom)))}
 function loadDB(){try{return JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){return {}}}
-function saveDB(){localStorage.setItem(KEY,JSON.stringify(db));renderReviews()}
-function esc(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
-function render(){
- const map=document.getElementById("map");
- map.querySelectorAll(".marker,.route,.routeNum").forEach(e=>e.remove());
- places.forEach((p,i)=>{
-   if(i<places.length-1)drawRoute(p,places[i+1]);
-   const n=document.createElement("div");n.className="routeNum";n.style.left=p.x+"%";n.style.top=p.y+"%";n.textContent=i+1;map.appendChild(n);
-   const m=document.createElement("button");m.type="button";m.className="marker"+(selected===i?" active":"");m.style.left=p.x+"%";m.style.top=p.y+"%";m.innerHTML=`<div class="pin">${p.icon}</div><div class="label">${p.name}</div>`;m.addEventListener("click",()=>selectPlace(i));map.appendChild(m);
- });
- const list=document.getElementById("places");list.innerHTML="";
- places.forEach((p,i)=>{const b=document.createElement("button");b.type="button";b.className="placeBtn"+(selected===i?" selected":"");b.textContent=`${i+1}. ${p.name}`;b.addEventListener("click",()=>selectPlace(i));list.appendChild(b)});
- renderReviews();
+function migrateReviewDB(){
+  const raw=loadDB(); const already=localStorage.getItem(DB_MIGRATION_KEY)==="1";
+  if(already||!raw||typeof raw!=="object")return raw;
+  localStorage.setItem(DB_MIGRATION_KEY,"1"); return raw;
+}
+
+const savedCustomPlaces=loadCustomPlaces();
+let places=[...DEFAULT_PLACES,...savedCustomPlaces];
+let db=migrateReviewDB();
+let selected=null,currentPhotos=[];
+let designMode=false,designerPoint=null,designerIcon="⭐";
+
+const hints=[
+ ["⏰ 시간","나의 시간을 나눌 수 있을까? 함께 이야기하기, 놀아주기, 도와주기 등"],
+ ["🎁 물건","내가 가진 것 중 다른 사람에게 필요한 것은 무엇일까?"],
+ ["🎨 재능","내가 잘하거나 좋아하는 것을 다른 사람과 나눌 수 있을까?"],
+ ["💪 힘","내가 직접 움직이거나 도와줄 수 있는 일은 무엇일까?"],
+ ["💬 관심","누군가에게 관심을 보여주는 것도 나눔이에요. 무엇을 듣고 물어볼까?"],
+ ["😊 친절","작은 친절 하나로 누군가의 하루가 달라질 수 있을까?"],
+ ["🌱 환경","우리 동네 환경을 위해 내가 할 수 있는 나눔은 무엇일까?"]
+];
+
+function render(){renderReviews();renderPlaceList();renderMap();}
+function renderPlaceList(){
+ const box=document.getElementById("placeList");
+ box.innerHTML=places.map((p,i)=>`<button type="button" class="place-chip" data-place="${i}"><strong>${esc(p.icon||"📍")}</strong>${esc(p.name||"장소")}</button>`).join("");
+ box.querySelectorAll("[data-place]").forEach(b=>b.addEventListener("click",()=>selectPlace(+b.dataset.place)));
 }
 function drawRoute(a,b){
- const map=document.getElementById("map"),w=map.clientWidth,h=map.clientHeight,x1=a.x/100*w,y1=a.y/100*h,x2=b.x/100*w,y2=b.y/100*h,dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy),ang=Math.atan2(dy,dx)*180/Math.PI;
- const r=document.createElement("div");r.className="route";r.style.left=x1+"px";r.style.top=y1+"px";r.style.width=len+"px";r.style.transform=`rotate(${ang}deg)`;map.appendChild(r);
+ const mapEl=document.getElementById("map");
+ const w=mapEl.clientWidth,h=mapEl.clientHeight,x1=a.x/100*w,y1=a.y/100*h,x2=b.x/100*w,y2=b.y/100*h;
+ const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy),ang=Math.atan2(dy,dx)*180/Math.PI;
+ const r=document.createElement("div");r.className="route";r.style.left=x1+"px";r.style.top=y1+"px";r.style.width=len+"px";r.style.transform=`rotate(${ang}deg)`;mapEl.appendChild(r);
 }
-function selectPlace(i){selected=i;currentPhotos=[];showForm();render()}
+function renderMap(){
+ const mapEl=document.getElementById("map");
+ if(!mapEl)return;
+ mapEl.querySelectorAll(".marker,.route,.routeNum").forEach(e=>e.remove());
+ const fixed=places.filter(p=>p.fixed);
+ for(let i=0;i<fixed.length-1;i++)drawRoute(fixed[i],fixed[i+1]);
+ places.forEach((p,i)=>{
+   if(p.fixed){const n=document.createElement("div");n.className="routeNum";n.style.left=p.x+"%";n.style.top=p.y+"%";n.textContent=p.number||i+1;mapEl.appendChild(n);}
+   const m=document.createElement("button");
+   m.type="button";m.className="marker"+(selected===i?" active":"")+(p.custom?" custom":"");
+   m.style.left=p.x+"%";m.style.top=p.y+"%";
+   m.innerHTML=`<div class="pin">${esc(p.icon||"📍")}</div><div class="label">${esc(p.name||"장소")}</div>`;
+   m.addEventListener("click",e=>{e.stopPropagation();selectPlace(i)});
+   mapEl.appendChild(m);
+ });
+}
+function setDesignMode(on){
+ designMode=!!on;
+ const btn=document.getElementById("designBtn");
+ document.getElementById("designHint").style.display=designMode?"block":"none";
+ document.getElementById("map").classList.toggle("designing",designMode);
+ btn.classList.toggle("activeTool",designMode);
+ btn.textContent=designMode?"✕ 장소 지정 취소":"📍 장소 직접 지정";
+}
+function openPlaceDesigner(point){
+ designerPoint=point;designerIcon="⭐";
+ document.getElementById("customPlaceName").value="";
+ document.getElementById("customPlaceAddr").value="";
+ document.getElementById("pickedLocation").textContent=`📌 지도 위치 ${point.x.toFixed(1)}% · ${point.y.toFixed(1)}%`;
+ document.querySelectorAll(".iconChoice").forEach((b,i)=>b.classList.toggle("chosen",i===0));
+ document.getElementById("placeModalStatus").textContent="";
+ document.getElementById("placeModal").classList.add("open");
+}
+function closePlaceDesigner(){document.getElementById("placeModal").classList.remove("open");designerPoint=null;setDesignMode(false)}
+function addCustomPlace(){
+ if(!designerPoint)return;
+ const name=document.getElementById("customPlaceName").value.trim(),addr=document.getElementById("customPlaceAddr").value.trim(),status=document.getElementById("placeModalStatus");
+ if(!name){status.textContent="장소 이름을 적어주세요.";status.className="status err";return}
+ const p={id:"custom-"+Date.now(),name,addr:addr||"지도에서 직접 지정한 장소",icon:designerIcon,x:designerPoint.x,y:designerPoint.y,custom:true};
+ places.push(p);saveCustomPlaces();selected=places.length-1;closePlaceDesigner();render();showForm();
+ setTimeout(()=>document.getElementById("detail")?.scrollIntoView({behavior:"smooth",block:"start"}),80);
+}
+function selectPlace(i){selected=i;currentPhotos=[];showForm();render();setTimeout(()=>document.getElementById("detail")?.scrollIntoView({behavior:"smooth",block:"start"}),60)}
+
+function handleMapTap(e){
+ if(!designMode)return;
+ if(e.target.closest(".marker"))return;
+ const rect=e.currentTarget.getBoundingClientRect();
+ const x=Math.max(2,Math.min(98,((e.clientX-rect.left)/rect.width)*100));
+ const y=Math.max(5,Math.min(95,((e.clientY-rect.top)/rect.height)*100));
+ openPlaceDesigner({x,y});
+}
 function showForm(){
- if(selected===null)return;
- const p=places[selected];
- document.getElementById("title").textContent=p.icon+" "+p.name;
- document.getElementById("detail").innerHTML=`
- <div class="small">${esc(p.addr)}</div>
- <form id="reviewForm">
- <label>👤 작성자 이름(별명)</label><input type="text" id="author" placeholder="예: 지히 / 1조 / 민수">
+ if(selected===null)return; const p=places[selected];document.getElementById("title").textContent=p.icon+" "+p.name;
+ document.getElementById("detail").innerHTML=`<div class="small">${esc(p.addr)}</div><form id="reviewForm">
+ <label>👤 작성자 이름(별명)</label><input type="text" id="author" placeholder="예: 이지희(지히)">
  <label>👀 나눔 발견</label><textarea id="discover" placeholder="이곳에서 어떤 나눔을 볼 수 있었나요?"></textarea>
  <label>🔎 불편함 발견</label><textarea id="need" placeholder="조금 더 좋아지려면 무엇이 필요할까요?"></textarea>
  <label>💡 우리가 할 수 있는 나눔</label><textarea id="idea" placeholder="우리가 직접 할 수 있는 작은 나눔은?"></textarea>
  <label>🏷️ 나눔 유형</label><select id="type"><option value="">선택</option>${["시간","물건","재능","힘","관심","친절","환경"].map(x=>`<option value="${x}">${x}</option>`).join("")}</select>
- <label>⭐ 내가 해보고 싶은 나눔</label>
- <div class="stars" id="starBox" data-rating="0" aria-label="별점 선택">${[1,2,3,4,5].map(n=>`<button type="button" data-n="${n}" aria-label="${n}점">☆</button>`).join("")}</div>
- <label>📷 사진 남기기</label><input id="photoInput" type="file" accept="image/*" capture="environment" multiple>
- <div id="photos" class="photos"></div>
+ <label>⭐ 내가 해보고 싶은 나눔</label><div class="stars" id="starBox" data-rating="0">${[1,2,3,4,5].map(n=>`<button type="button" data-n="${n}" aria-label="${n}점">☆</button>`).join("")}</div>
+ <label>📷 사진 남기기</label><input id="photoInput" type="file" accept="image/*" capture="environment" multiple><div id="photos" class="photos"></div>
  <label>✏️ 한 줄 리뷰</label><textarea id="review" placeholder="오늘 발견한 것을 한 줄로 적어보세요!"></textarea>
- <div class="controls" style="margin-top:10px"><button class="primary" id="saveBtn" type="submit">리뷰 등록</button></div>
- <div id="status" class="status"></div>
- </form>`;
- document.querySelectorAll("#starBox button").forEach(btn=>btn.addEventListener("click",()=>rate(+btn.dataset.n)));
- document.getElementById("photoInput").addEventListener("change",photosSelected);
- document.getElementById("reviewForm").addEventListener("submit",saveReview);
+ <div class="controls" style="margin-top:10px"><button class="primary" id="saveBtn" type="submit">리뷰 등록</button></div><div id="status" class="status"></div></form>`;
+ document.querySelectorAll("#starBox button").forEach(b=>b.addEventListener("click",()=>rate(+b.dataset.n)));
+ document.getElementById("photoInput").addEventListener("change",photosSelected);document.getElementById("reviewForm").addEventListener("submit",saveReview);
 }
-function rate(n){
- const box=document.getElementById("starBox");if(!box)return;
- box.dataset.rating=String(n);
- box.querySelectorAll("button").forEach(b=>b.textContent=+b.dataset.n<=n?"★":"☆");
-}
-function compressImage(file,maxSide=1000,quality=.72){
- return new Promise((resolve,reject)=>{
-  const reader=new FileReader();reader.onerror=reject;
-  reader.onload=()=>{const img=new Image();img.onerror=reject;img.onload=()=>{
-    let w=img.width,h=img.height,scale=Math.min(1,maxSide/Math.max(w,h));w=Math.max(1,Math.round(w*scale));h=Math.max(1,Math.round(h*scale));
-    const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);resolve(c.toDataURL("image/jpeg",quality));
-  };img.src=reader.result};reader.readAsDataURL(file);
- });
-}
-async function photosSelected(e){
- currentPhotos=[];showPhotos();const files=[...e.target.files].slice(0,6);
- for(const file of files){if(!file.type.startsWith("image/"))continue;try{currentPhotos.push(await compressImage(file))}catch(err){}}
- showPhotos();
- if(e.target.files.length>6)setStatus("사진은 최대 6장까지 등록돼요.","ok");
-}
-function showPhotos(){
- const el=document.getElementById("photos");if(!el)return;
- el.innerHTML=currentPhotos.map((src,i)=>`<div class="photo"><img src="${src}" alt="첨부 사진 ${i+1}"><button type="button" class="remove" data-remove="${i}" aria-label="사진 삭제">×</button></div>`).join("");
- el.querySelectorAll("[data-remove]").forEach(b=>b.addEventListener("click",()=>{currentPhotos.splice(+b.dataset.remove,1);showPhotos()}));
- el.querySelectorAll("img").forEach(img=>img.addEventListener("click",()=>openPhoto(img.src)));
-}
-function saveReview(e){
- e.preventDefault();const btn=document.getElementById("saveBtn");if(!btn||selected===null)return;btn.disabled=true;setStatus("리뷰를 저장하는 중이에요…","");
- try{
-   const r={id:Date.now()+Math.random(),author:(val("author")||"익명").trim(),discover:val("discover"),need:val("need"),idea:val("idea"),type:val("type"),rating:+(document.getElementById("starBox")?.dataset.rating||0),photos:[...currentPhotos],text:val("review"),time:new Date().toLocaleString("ko-KR")};
-   db[selected]=Array.isArray(db[selected])?db[selected]:[];db[selected].push(r);
-   const serialized=JSON.stringify(db);
-   if(serialized.length>4800000)throw new Error("저장 공간이 부족합니다. 사진을 조금 줄여주세요.");
-   localStorage.setItem(KEY,serialized);
-   selected=null;currentPhotos=[];render();
-   document.getElementById("title").textContent="📍 장소를 선택해 주세요";
-   document.getElementById("detail").innerHTML='<div class="empty">리뷰가 등록되었어요! 🎉<br>아래에서 모든 리뷰를 확인할 수 있어요.</div>';
-   alert("리뷰가 등록되었어요! 🎉");
- }catch(err){setStatus("등록에 실패했어요: "+err.message,"err");btn.disabled=false}
-}
-function val(id){return document.getElementById(id)?.value||""}
-function setStatus(t,c){const s=document.getElementById("status");if(s){s.textContent=t;s.className="status "+c}}
-function renderReviews(){
- const box=document.getElementById("allReviews"),arr=[];
- places.forEach((p,i)=>(db[i]||[]).forEach(r=>arr.push({p,r})));
- arr.sort((a,b)=>(b.r.id||0)-(a.r.id||0));
- box.innerHTML=arr.length?arr.map(({p,r})=>`
- <div class="review">
- <div class="reviewHead"><b>${p.icon} ${esc(p.name)}</b><span class="badge">${esc(r.author||"익명")} · ${esc(r.time||"")}</span></div>
- <div class="stars" style="font-size:20px">${"★".repeat(r.rating||0)}${"☆".repeat(5-(r.rating||0))}</div>
- ${r.discover?`<div><b>👀 나눔 발견</b> ${esc(r.discover)}</div>`:""}
- ${r.need?`<div><b>🔎 불편함</b> ${esc(r.need)}</div>`:""}
- ${r.idea?`<div><b>💡 우리가 할 수 있는 나눔</b> ${esc(r.idea)}</div>`:""}
- ${r.type?`<div><span class="badge">${esc(r.type)}</span></div>`:""}
- ${r.text?`<div style="margin-top:5px">✏️ ${esc(r.text)}</div>`:""}
- ${Array.isArray(r.photos)&&r.photos.length?`<div>${r.photos.map((src,j)=>`<img src="${src}" alt="리뷰 사진 ${j+1}" data-photo="${esc(src)}">`).join("")}</div>`:""}
- </div>`).join(""):"<div class='empty'>아직 작성된 리뷰가 없어요.<br>첫 번째 나눔 리뷰를 남겨보세요!</div>";
- box.querySelectorAll("[data-photo]").forEach(img=>img.addEventListener("click",()=>openPhoto(img.dataset.photo)));
-}
-function openPhoto(src){const box=document.getElementById("lightbox"),img=document.getElementById("lightboxImg");img.src=src;box.classList.add("open");document.body.style.overflow="hidden"}
-function closePhoto(){document.getElementById("lightbox").classList.remove("open");document.getElementById("lightboxImg").src="";document.body.style.overflow=""}
-function exportData(){
- const blob=new Blob([JSON.stringify(db)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="사동마블_나눔리뷰_백업.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-}
-function importData(e){
- const f=e.target.files[0];if(!f)return;const reader=new FileReader();
- reader.onload=ev=>{try{const incoming=JSON.parse(ev.target.result);Object.keys(incoming).forEach(k=>{db[k]=[...(db[k]||[]),...(incoming[k]||[])]});localStorage.setItem(KEY,JSON.stringify(db));renderReviews();alert("리뷰를 불러왔어요! 기존 리뷰와 합쳐졌습니다.")}catch(err){alert("리뷰 파일을 읽지 못했어요.")}};reader.readAsText(f);e.target.value="";
-}
-function resetUnused(){localStorage.removeItem(KEY)}
-document.getElementById("hintBtn").addEventListener("click",()=>{const h=hints[Math.floor(Math.random()*hints.length)];alert(h[0]+"\\n\\n"+h[1])});
-document.getElementById("backupBtn").addEventListener("click",exportData);
-document.getElementById("importBtn").addEventListener("click",()=>document.getElementById("importFile").click());
-document.getElementById("importFile").addEventListener("change",importData);
-document.getElementById("lightboxClose").addEventListener("click",closePhoto);
-document.getElementById("lightbox").addEventListener("click",e=>{if(e.target.id==="lightbox")closePhoto()});
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closePhoto()});
+function rate(n){const box=document.getElementById("starBox");if(!box)return;box.dataset.rating=String(n);box.querySelectorAll("button").forEach(b=>b.textContent=(+b.dataset.n<=n)?"★":"☆")}
+function compressImage(file,maxSide=1000,quality=.72){return new Promise((resolve,reject)=>{const rd=new FileReader();rd.onerror=reject;rd.onload=()=>{const img=new Image();img.onerror=reject;img.onload=()=>{let w=img.width,h=img.height,s=Math.min(1,maxSide/Math.max(w,h));w=Math.max(1,Math.round(w*s));h=Math.max(1,Math.round(h*s));const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);resolve(c.toDataURL("image/jpeg",quality))};img.src=rd.result};rd.readAsDataURL(file)})}
+async function photosSelected(e){currentPhotos=[];showPhotos();for(const f of [...e.target.files].slice(0,6)){if(!f.type.startsWith("image/"))continue;try{currentPhotos.push(await compressImage(f))}catch(_){}}showPhotos();if(e.target.files.length>6)setStatus("사진은 최대 6장까지 등록돼요.","ok")}
+function showPhotos(){const el=document.getElementById("photos");if(!el)return;el.innerHTML=currentPhotos.map((src,i)=>`<div class="photo"><img src="${src}" alt="첨부 사진 ${i+1}"><button type="button" class="remove" data-remove="${i}" aria-label="사진 삭제">×</button></div>`).join("");el.querySelectorAll("[data-remove]").forEach(b=>b.addEventListener("click",()=>{currentPhotos.splice(+b.dataset.remove,1);showPhotos()}));el.querySelectorAll("img").forEach(img=>img.addEventListener("click",()=>openPhoto(img.src)))}
+function saveReview(e){e.preventDefault();const btn=document.getElementById("saveBtn");if(!btn||selected===null)return;btn.disabled=true;setStatus("리뷰를 저장하는 중이에요…","");try{const r={id:Date.now()+Math.random(),author:(val("author")||"익명").trim(),discover:val("discover"),need:val("need"),idea:val("idea"),type:val("type"),rating:+(document.getElementById("starBox")?.dataset.rating||0),photos:[...currentPhotos],text:val("review"),time:new Date().toLocaleString("ko-KR")};db[selected]=Array.isArray(db[selected])?db[selected]:[];db[selected].push(r);const out=JSON.stringify(db);if(out.length>4800000)throw new Error("저장 공간이 부족합니다. 사진을 조금 줄여주세요.");localStorage.setItem(KEY,out);selected=null;currentPhotos=[];render();document.getElementById("title").textContent="📍 장소를 선택해 주세요";document.getElementById("detail").innerHTML='<div class="empty">리뷰가 등록되었어요! 🎉<br>아래에서 모든 리뷰를 확인할 수 있어요.</div>';alert("리뷰가 등록되었어요! 🎉")}catch(err){setStatus("등록에 실패했어요: "+err.message,"err");btn.disabled=false}}
+function val(id){return document.getElementById(id)?.value||""}function setStatus(t,c){const s=document.getElementById("status");if(s){s.textContent=t;s.className="status "+c}}
+function renderReviews(){const box=document.getElementById("allReviews"),arr=[];places.forEach((p,i)=>(db[i]||[]).forEach(r=>arr.push({p,r})));arr.sort((a,b)=>(b.r.id||0)-(a.r.id||0));box.innerHTML=arr.length?arr.map(({p,r})=>`<div class="review"><div class="reviewHead"><b>${esc(p.icon)} ${esc(p.name)}</b><span class="badge">${esc(r.author||"익명")} · ${esc(r.time||"")}</span></div><div class="stars" style="font-size:20px">${"★".repeat(r.rating||0)}${"☆".repeat(5-(r.rating||0))}</div>${r.discover?`<div><b>👀 나눔 발견</b> ${esc(r.discover)}</div>`:""}${r.need?`<div><b>🔎 불편함</b> ${esc(r.need)}</div>`:""}${r.idea?`<div><b>💡 우리가 할 수 있는 나눔</b> ${esc(r.idea)}</div>`:""}${r.type?`<div><span class="badge">${esc(r.type)}</span></div>`:""}${r.text?`<div style="margin-top:5px">✏️ ${esc(r.text)}</div>`:""}${Array.isArray(r.photos)&&r.photos.length?`<div>${r.photos.map((src,j)=>`<img src="${src}" alt="리뷰 사진 ${j+1}" data-photo="${esc(src)}">`).join("")}</div>`:""}</div>`).join(""):"<div class='empty'>아직 작성된 리뷰가 없어요.<br>첫 번째 나눔 리뷰를 남겨보세요!</div>";box.querySelectorAll("[data-photo]").forEach(img=>img.addEventListener("click",()=>openPhoto(img.dataset.photo)))}
+function openPhoto(src){const b=document.getElementById("lightbox"),i=document.getElementById("lightboxImg");i.src=src;b.classList.add("open");document.body.style.overflow="hidden"}function closePhoto(){document.getElementById("lightbox").classList.remove("open");document.getElementById("lightboxImg").src="";document.body.style.overflow=""}
+function exportData(){const blob=new Blob([JSON.stringify(db)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="사동마블_나눔리뷰_백업.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function importData(e){const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{try{const inc=JSON.parse(ev.target.result);Object.keys(inc).forEach(k=>{db[k]=[...(db[k]||[]),...(inc[k]||[])]});localStorage.setItem(KEY,JSON.stringify(db));renderReviews();alert("리뷰를 불러왔어요! 기존 리뷰와 합쳐졌습니다.")}catch(_){alert("리뷰 파일을 읽지 못했어요.")} };rd.readAsText(f);e.target.value=""}
+
+// Buttons
+document.getElementById("hintBtn").addEventListener("click",()=>{const h=hints[Math.floor(Math.random()*hints.length)];alert(h[0]+"\n\n"+h[1])});
+document.getElementById("designBtn").addEventListener("click",()=>setDesignMode(!designMode));
+document.getElementById("placeModalClose").addEventListener("click",closePlaceDesigner);document.getElementById("placeModalCancel").addEventListener("click",closePlaceDesigner);document.getElementById("saveCustomPlace").addEventListener("click",addCustomPlace);
+document.querySelectorAll(".iconChoice").forEach(btn=>btn.addEventListener("click",()=>{designerIcon=btn.dataset.icon;document.querySelectorAll('.iconChoice').forEach(b=>b.classList.toggle('chosen',b===btn))}));
+document.getElementById("placeModal").addEventListener("click",e=>{if(e.target.id==="placeModal")closePlaceDesigner()});document.getElementById("backupBtn").addEventListener("click",exportData);document.getElementById("importBtn").addEventListener("click",()=>document.getElementById("importFile").click());document.getElementById("importFile").addEventListener("change",importData);document.getElementById("lightboxClose").addEventListener("click",closePhoto);document.getElementById("lightbox").addEventListener("click",e=>{if(e.target.id==="lightbox")closePhoto()});document.addEventListener("keydown",e=>{if(e.key==="Escape")closePhoto()});
+
 render();
-window.addEventListener("resize",render);
+document.getElementById("map")?.addEventListener("click",handleMapTap);
+window.addEventListener("resize",()=>renderMap());
 </script>
 </body>
 </html>
