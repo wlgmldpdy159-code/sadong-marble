@@ -98,7 +98,7 @@ textarea{min-height:70px;resize:vertical}
   </div>
 </div>
 <div class="place-list" id="placeList"></div>
-<p class="small" style="margin-top:10px">※ 기본 장소는 사동복지센터·사동청소년문화의집·감골어린이공원·장화경로당·근처 횡단보도·고물상입니다. 활동용 지도이므로 실제 위치와는 다를 수 있어요.</p>
+<p class="small" style="margin-top:10px">※ 기본 장소는 사동복지센터·감골 어린이공원·근처 횡단보도·장화경로당·고물상입니다. 활동용 지도이므로 실제 위치와는 다를 수 있어요.</p>
 </section>
 
 <aside class="card">
@@ -138,11 +138,11 @@ textarea{min-height:70px;resize:vertical}
 <script>
 const DEFAULT_PLACES=[
  {id:"default-center",name:"사동복지센터",addr:"경기도 안산시 상록구 장화2길 20",icon:"🏠",fixed:true,number:1,x:17,y:80},
- {id:"default-youth",name:"사동청소년문화의집",addr:"경기 안산시 상록구 선진로 112",icon:"🏫",fixed:true,number:2,x:28,y:25},
- {id:"default-park",name:"감골 어린이공원",addr:"경기도 안산시 상록구 사동 1406-9번지",icon:"🌳",fixed:true,number:3,x:48,y:48},
- {id:"default-crosswalk",name:"근처 횡단보도",addr:"현장에서 위치 확인",icon:"🚸",fixed:true,number:4,x:63,y:59},
- {id:"default-senior",name:"장화경로당",addr:"경기 안산시 상록구 장화2길 20",icon:"🧓",fixed:true,number:5,x:72,y:77},
- {id:"default-junk",name:"고물상",addr:"경기 안산시 상록구 사동 1412",icon:"♻️",fixed:true,number:6,x:49,y:89}
+ {id:"default-youth",name:"사동청소년문화의집",addr:"경기 안산시 상록구 선진로 112",icon:"🏫",fixed:true,number:2,x:28,y:25,hidden:true},
+ {id:"default-park",name:"감골 어린이공원",addr:"경기도 안산시 상록구 사동 1406-9번지",icon:"🌳",fixed:true,number:2,x:48,y:48},
+ {id:"default-crosswalk",name:"근처 횡단보도",addr:"현장에서 위치 확인",icon:"🚸",fixed:true,number:3,x:63,y:59},
+ {id:"default-senior",name:"장화경로당",addr:"경기 안산시 상록구 장화2길 20",icon:"🧓",fixed:true,number:4,x:72,y:77},
+ {id:"default-junk",name:"고물상",addr:"경기 안산시 상록구 사동 1412",icon:"♻️",fixed:true,number:5,x:49,y:89}
 ];
 const CUSTOM_PLACES_KEY="sadongMarvelCustomPlacesV2";
 const KEY="sadongMarvelFinalReviewsV1";
@@ -177,7 +177,7 @@ const hints=[
 function render(){renderReviews();renderPlaceList();renderMap();}
 function renderPlaceList(){
  const box=document.getElementById("placeList");
- box.innerHTML=places.map((p,i)=>`<button type="button" class="place-chip" data-place="${i}"><strong>${esc(p.icon||"📍")}</strong>${esc(p.name||"장소")}</button>`).join("");
+ box.innerHTML=places.map((p,i)=>p.hidden?"":`<button type="button" class="place-chip" data-place="${i}"><strong>${esc(p.icon||"📍")}</strong>${esc(p.name||"장소")}</button>`).join("");
  box.querySelectorAll("[data-place]").forEach(b=>b.addEventListener("click",()=>selectPlace(+b.dataset.place)));
 }
 function drawRoute(a,b){
@@ -190,9 +190,10 @@ function renderMap(){
  const mapEl=document.getElementById("map");
  if(!mapEl)return;
  mapEl.querySelectorAll(".marker,.route,.routeNum").forEach(e=>e.remove());
- const fixed=places.filter(p=>p.fixed);
+ const fixed=places.filter(p=>p.fixed&&!p.hidden);
  for(let i=0;i<fixed.length-1;i++)drawRoute(fixed[i],fixed[i+1]);
  places.forEach((p,i)=>{
+   if(p.hidden)return;
    if(p.fixed){const n=document.createElement("div");n.className="routeNum";n.style.left=p.x+"%";n.style.top=p.y+"%";n.textContent=p.number||i+1;mapEl.appendChild(n);}
    const m=document.createElement("button");
    m.type="button";m.className="marker"+(selected===i?" active":"")+(p.custom?" custom":"");
@@ -259,7 +260,7 @@ async function photosSelected(e){currentPhotos=[];showPhotos();for(const f of [.
 function showPhotos(){const el=document.getElementById("photos");if(!el)return;el.innerHTML=currentPhotos.map((src,i)=>`<div class="photo"><img src="${src}" alt="첨부 사진 ${i+1}"><button type="button" class="remove" data-remove="${i}" aria-label="사진 삭제">×</button></div>`).join("");el.querySelectorAll("[data-remove]").forEach(b=>b.addEventListener("click",()=>{currentPhotos.splice(+b.dataset.remove,1);showPhotos()}));el.querySelectorAll("img").forEach(img=>img.addEventListener("click",()=>openPhoto(img.src)))}
 function saveReview(e){e.preventDefault();const btn=document.getElementById("saveBtn");if(!btn||selected===null)return;btn.disabled=true;setStatus("리뷰를 저장하는 중이에요…","");try{const r={id:Date.now()+Math.random(),author:(val("author")||"익명").trim(),discover:val("discover"),need:val("need"),idea:val("idea"),type:val("type"),rating:+(document.getElementById("starBox")?.dataset.rating||0),photos:[...currentPhotos],text:val("review"),time:new Date().toLocaleString("ko-KR")};db[selected]=Array.isArray(db[selected])?db[selected]:[];db[selected].push(r);const out=JSON.stringify(db);if(out.length>4800000)throw new Error("저장 공간이 부족합니다. 사진을 조금 줄여주세요.");localStorage.setItem(KEY,out);selected=null;currentPhotos=[];render();document.getElementById("title").textContent="📍 장소를 선택해 주세요";document.getElementById("detail").innerHTML='<div class="empty">리뷰가 등록되었어요! 🎉<br>아래에서 모든 리뷰를 확인할 수 있어요.</div>';alert("리뷰가 등록되었어요! 🎉")}catch(err){setStatus("등록에 실패했어요: "+err.message,"err");btn.disabled=false}}
 function val(id){return document.getElementById(id)?.value||""}function setStatus(t,c){const s=document.getElementById("status");if(s){s.textContent=t;s.className="status "+c}}
-function renderReviews(){const box=document.getElementById("allReviews"),arr=[];places.forEach((p,i)=>(db[i]||[]).forEach(r=>arr.push({p,r})));arr.sort((a,b)=>(b.r.id||0)-(a.r.id||0));box.innerHTML=arr.length?arr.map(({p,r})=>`<div class="review"><div class="reviewHead"><b>${esc(p.icon)} ${esc(p.name)}</b><span class="badge">${esc(r.author||"익명")} · ${esc(r.time||"")}</span></div><div class="stars" style="font-size:20px">${"★".repeat(r.rating||0)}${"☆".repeat(5-(r.rating||0))}</div>${r.discover?`<div><b>👀 나눔 발견</b> ${esc(r.discover)}</div>`:""}${r.need?`<div><b>🔎 불편함</b> ${esc(r.need)}</div>`:""}${r.idea?`<div><b>💡 우리가 할 수 있는 나눔</b> ${esc(r.idea)}</div>`:""}${r.type?`<div><span class="badge">${esc(r.type)}</span></div>`:""}${r.text?`<div style="margin-top:5px">✏️ ${esc(r.text)}</div>`:""}${Array.isArray(r.photos)&&r.photos.length?`<div>${r.photos.map((src,j)=>`<img src="${src}" alt="리뷰 사진 ${j+1}" data-photo="${esc(src)}">`).join("")}</div>`:""}</div>`).join(""):"<div class='empty'>아직 작성된 리뷰가 없어요.<br>첫 번째 나눔 리뷰를 남겨보세요!</div>";box.querySelectorAll("[data-photo]").forEach(img=>img.addEventListener("click",()=>openPhoto(img.dataset.photo)))}
+function renderReviews(){const box=document.getElementById("allReviews"),arr=[];places.forEach((p,i)=>{if(p.hidden)return;(db[i]||[]).forEach(r=>arr.push({p,r}))});arr.sort((a,b)=>(b.r.id||0)-(a.r.id||0));box.innerHTML=arr.length?arr.map(({p,r})=>`<div class="review"><div class="reviewHead"><b>${esc(p.icon)} ${esc(p.name)}</b><span class="badge">${esc(r.author||"익명")} · ${esc(r.time||"")}</span></div><div class="stars" style="font-size:20px">${"★".repeat(r.rating||0)}${"☆".repeat(5-(r.rating||0))}</div>${r.discover?`<div><b>👀 나눔 발견</b> ${esc(r.discover)}</div>`:""}${r.need?`<div><b>🔎 불편함</b> ${esc(r.need)}</div>`:""}${r.idea?`<div><b>💡 우리가 할 수 있는 나눔</b> ${esc(r.idea)}</div>`:""}${r.type?`<div><span class="badge">${esc(r.type)}</span></div>`:""}${r.text?`<div style="margin-top:5px">✏️ ${esc(r.text)}</div>`:""}${Array.isArray(r.photos)&&r.photos.length?`<div>${r.photos.map((src,j)=>`<img src="${src}" alt="리뷰 사진 ${j+1}" data-photo="${esc(src)}">`).join("")}</div>`:""}</div>`).join(""):"<div class='empty'>아직 작성된 리뷰가 없어요.<br>첫 번째 나눔 리뷰를 남겨보세요!</div>";box.querySelectorAll("[data-photo]").forEach(img=>img.addEventListener("click",()=>openPhoto(img.dataset.photo)))}
 function openPhoto(src){const b=document.getElementById("lightbox"),i=document.getElementById("lightboxImg");i.src=src;b.classList.add("open");document.body.style.overflow="hidden"}function closePhoto(){document.getElementById("lightbox").classList.remove("open");document.getElementById("lightboxImg").src="";document.body.style.overflow=""}
 function exportData(){const blob=new Blob([JSON.stringify(db)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="사동마블_나눔리뷰_백업.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function importData(e){const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=ev=>{try{const inc=JSON.parse(ev.target.result);Object.keys(inc).forEach(k=>{db[k]=[...(db[k]||[]),...(inc[k]||[])]});localStorage.setItem(KEY,JSON.stringify(db));renderReviews();alert("리뷰를 불러왔어요! 기존 리뷰와 합쳐졌습니다.")}catch(_){alert("리뷰 파일을 읽지 못했어요.")} };rd.readAsText(f);e.target.value=""}
